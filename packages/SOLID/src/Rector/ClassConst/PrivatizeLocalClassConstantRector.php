@@ -75,11 +75,11 @@ CODE_SAMPLE
         if ($classConstantFetches === null) {
             // never used, make private
             $node->flags |= Node\Stmt\Class_::MODIFIER_PRIVATE;
-        } else {
-            // @todo
+        }
+        // @todo
 //            dump($classConstantFetches);
 //            die;
-        }
+
 
         return $node;
     }

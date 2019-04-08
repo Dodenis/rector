@@ -7,7 +7,6 @@ use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Stmt\ClassConst;
 use Rector\Exception\ShouldNotHappenException;
 use Rector\NodeTypeResolver\Node\Attribute;
-use Rector\NodeTypeResolver\NodeTypeResolver;
 use Rector\PhpParser\Node\Resolver\NameResolver;
 
 final class ConstantNodeCollector
@@ -23,19 +22,13 @@ final class ConstantNodeCollector
     private $nameResolver;
 
     /**
-     * @var NodeTypeResolver
-     */
-    private $nodeTypeResolver;
-
-    /**
      * @var ClassConstFetch[][][]
      */
     private $classConstantFetchByClassAndName = [];
 
-    public function __construct(NameResolver $nameResolver, NodeTypeResolver $nodeTypeResolver)
+    public function __construct(NameResolver $nameResolver)
     {
         $this->nameResolver = $nameResolver;
-        $this->nodeTypeResolver = $nodeTypeResolver;
     }
 
     public function addClassConstant(ClassConst $classConst): void
