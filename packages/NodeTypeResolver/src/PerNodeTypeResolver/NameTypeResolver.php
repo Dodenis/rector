@@ -44,6 +44,7 @@ final class NameTypeResolver implements PerNodeTypeResolverInterface
     private function resolveFullyQualifiedName(Node $nameNode, string $name): ?string
     {
         if (in_array($name, ['self', 'static', 'this'], true)) {
+            // @todo this should be resolved, sometimes is null
             return $nameNode->getAttribute(Attribute::CLASS_NAME);
         }
 

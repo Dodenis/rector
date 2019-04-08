@@ -59,6 +59,14 @@ final class ClassAndMethodNodeVisitor extends NodeVisitorAbstract
         $this->processClass($node);
         $this->processMethod($node);
 
+        // process class statements
+        if ($node instanceof ClassLike) {
+            foreach ($node->stmts as $classStmt) {
+                $classStmt->setAttribute(Attribute::CLASS_NODE, $this->classNode);
+                $classStmt->setAttribute(Attribute::CLASS_NAME, $this->className);
+            }
+        }
+
         return $node;
     }
 

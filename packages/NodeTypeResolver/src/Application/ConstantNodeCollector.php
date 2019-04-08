@@ -3,9 +3,11 @@
 namespace Rector\NodeTypeResolver\Application;
 
 use Nette\Utils\Strings;
+use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Stmt\ClassConst;
 use Rector\Exception\ShouldNotHappenException;
 use Rector\NodeTypeResolver\Node\Attribute;
+use Rector\NodeTypeResolver\NodeTypeResolver;
 use Rector\PhpParser\Node\Resolver\NameResolver;
 
 final class ConstantNodeCollector
@@ -20,12 +22,23 @@ final class ConstantNodeCollector
      */
     private $nameResolver;
 
-    public function __construct(NameResolver $nameResolver)
+    /**
+     * @var NodeTypeResolver
+     */
+    private $nodeTypeResolver;
+
+    /**
+     * @var ClassConstFetch[][][]
+     */
+    private $classConstantFetchByClassAndName = [];
+
+    public function __construct(NameResolver $nameResolver, NodeTypeResolver $nodeTypeResolver)
     {
         $this->nameResolver = $nameResolver;
+        $this->nodeTypeResolver = $nodeTypeResolver;
     }
 
-    public function addConstant(ClassConst $classConst): void
+    public function addClassConstant(ClassConst $classConst): void
     {
         $className = $classConst->getAttribute(Attribute::CLASS_NAME);
         if ($className === null) {
@@ -37,12 +50,37 @@ final class ConstantNodeCollector
         $this->constantsByType[$className][$constantName] = $classConst;
     }
 
-    public function findConstant(string $constantName, string $className): ?ClassConst
+    public function addClassConstantFetch(ClassConstFetch $classConstFetch): void
+    {
+        $className = $this->nameResolver->resolve($classConstFetch->class);
+        if (in_array($className, ['static', 'self', 'parent'], true)) {
+            // we record only foreign class usage
+            return;
+        }
+
+        $constantName = $this->nameResolver->resolve($classConstFetch->name);
+        if ($constantName === 'class') {
+            // not a manual constant
+            return;
+        }
+
+        $this->classConstantFetchByClassAndName[$className][$constantName][] = $classConstFetch;
+    }
+
+    public function findClassConstant(string $className, string $constantName): ?ClassConst
     {
         if (Strings::contains($constantName, '\\')) {
             throw new ShouldNotHappenException(sprintf('Switched arguments in "%s"', __METHOD__));
         }
 
         return $this->constantsByType[$className][$constantName] ?? null;
+    }
+
+    /**
+     * @return ClassConstFetch[]|null
+     */
+    public function findClassConstantFetches(string $className, string $constantName): ?array
+    {
+        return $this->classConstantFetchByClassAndName[$className][$constantName] ?? null;
     }
 }
